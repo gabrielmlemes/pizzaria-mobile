@@ -1,3 +1,4 @@
+import { useContext, useState } from "react";
 import {
   Text,
   View,
@@ -7,7 +8,26 @@ import {
   TouchableOpacity,
 } from "react-native";
 
+import { AuthContext } from "../../contexts/AuthContext";
+
 const SignIn = () => {
+  const { signIn } = useContext(AuthContext);
+
+  const [login, setLogin] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function handleLogin() {
+    if (login === "" || password === "") {
+      alert("Preencha todos os campos");
+      return;
+    }
+
+    await signIn({ email: login, password: password });
+
+    setLogin("");
+    setPassword("");
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.logo}>
@@ -16,11 +36,22 @@ const SignIn = () => {
       </View>
 
       <View style={styles.inputContainer}>
-        <TextInput placeholder="Digite seu email" style={styles.input} />
-        <TextInput placeholder="Digite sua senha" style={styles.input} secureTextEntry={true}/>
+        <TextInput
+          placeholder="Digite seu email"
+          style={styles.input}
+          value={login}
+          onChangeText={(text) => setLogin(text)}
+        />
+        <TextInput
+          placeholder="Digite sua senha"
+          style={styles.input}
+          secureTextEntry={true}
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+        />
       </View>
 
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Acessar</Text>
       </TouchableOpacity>
     </View>

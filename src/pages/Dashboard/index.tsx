@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -7,10 +7,40 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../contexts/AuthContext";
+import axios from "axios";
+
+import { StackParamsList } from "../../routes/app.routes";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 const Dashboard = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<StackParamsList>>()
+
+  const [tableNumber, setTableNumber] = useState('')
+
   const { signOut } = useContext(AuthContext);
+
+  async function openOrder() {
+    if (tableNumber === '') {
+      alert('Preencha o número da mesa')
+      return
+    }
+
+    navigation.navigate('Order', {
+      number: tableNumber,
+      order_id: '5a0be079-338f-4f50-80ea-d6f9bdd285fe'
+    })
+
+    // try {
+    //   axios.post('http://localhost:5432/orders', { 
+    //     tableNumber: tableNumber,
+    //   })
+    // } catch (error) {
+    //   console.log('Erro ao criar a mesa', error);
+      
+    // }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -20,8 +50,10 @@ const Dashboard = () => {
         placeholderTextColor="#f0f0f0"
         style={styles.input}
         keyboardType="numeric"
+        value={tableNumber}
+        onChangeText={(text) => setTableNumber(text)}
       />
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={openOrder}>
         <Text style={styles.buttonText}>ABRIR MESA</Text>
       </TouchableOpacity>
     </SafeAreaView>

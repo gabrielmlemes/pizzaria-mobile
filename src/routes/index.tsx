@@ -6,10 +6,7 @@ import AuthRoutes from "./auth.routes";
 import { AuthContext } from "../contexts/AuthContext";
 
 const Routes = () => {
-  const {isAuthenticated} = useContext(AuthContext)
-
-  const Authenticated = isAuthenticated;
-  const loading = false;
+  const {isAuthenticated, loading} = useContext(AuthContext)
 
   if (loading) {
     return (
@@ -26,7 +23,7 @@ const Routes = () => {
     );
   }
 
-  return Authenticated ? <AppRoutes /> : <AuthRoutes />;
+  return isAuthenticated ? <AppRoutes /> : <AuthRoutes />;
 };
 
 export default Routes;

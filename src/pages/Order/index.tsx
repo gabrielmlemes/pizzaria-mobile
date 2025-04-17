@@ -1,16 +1,16 @@
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Text,
   View,
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  Modal,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../../services/api";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { StackParamsList } from "../../routes/app.routes";
+import ModalPicker from "../../components/ModalPicker";
 
 type RouteDetailsParams = {
   Order: {
@@ -21,12 +21,30 @@ type RouteDetailsParams = {
 
 type OrderRouteProps = RouteProp<RouteDetailsParams, "Order">;
 
+export interface CategoryProps {
+  id: string;
+  name: string;
+}
+
 const Order = () => {
-  const navigation =
-    useNavigation();
+  const navigation = useNavigation();
 
   const route = useRoute<OrderRouteProps>();
   const [qtd, setQtd] = useState("");
+  const [category, setCategory] = useState<CategoryProps[] | []>([]);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryProps>();
+  const [modalCategoryVisible, setModalCategoryVisible] = useState(false);
+
+  const fetchData = async () => {
+    await api.get("/category").then((response) => {
+      setCategory(response.data);
+      setSelectedCategory(response.data[0]);
+    });
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   async function handleDelete(id: string) {
     try {
@@ -42,6 +60,18 @@ const Order = () => {
     }
   }
 
+  function handleModal() {
+    setModalCategoryVisible(true);
+  }
+
+  function closeModal() {
+    setModalCategoryVisible(false);
+  }
+
+  function handleChangeCategory(item:CategoryProps) {
+    setSelectedCategory(item)
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.table}>
@@ -51,13 +81,30 @@ const Order = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.input}>
-        <Text style={styles.orderText}>Pizza</Text>
+      {/* refact */}
+      <TouchableOpacity style={styles.input} onPress={handleModal}>
+        <Text style={styles.orderText}>
+          {selectedCategory?.name
+            ? selectedCategory?.name
+            : "Nenhuma categoria disponível"}
+        </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.input}>
-        <Text style={styles.orderText}>Pizza de frango com catupiry</Text>
-      </TouchableOpacity>
+      {modalCategoryVisible && (
+        <Modal
+          transparent={true}
+          visible={modalCategoryVisible}
+          animationType="fade"
+         >
+          <ModalPicker
+            selectedItem={handleChangeCategory}
+            closeModal={closeModal}
+            category={category}
+          />
+        </Modal>
+      )}
+
+      <TouchableOpacity style={styles.input}></TouchableOpacity>
 
       <View style={styles.qtdContainer}>
         <Text style={styles.qtdText}>Quantidade</Text>

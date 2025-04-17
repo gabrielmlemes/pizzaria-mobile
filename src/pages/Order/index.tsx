@@ -1,4 +1,4 @@
-import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import {
   Text,
@@ -8,6 +8,9 @@ import {
   TextInput,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { api } from "../../services/api";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { StackParamsList } from "../../routes/app.routes";
 
 type RouteDetailsParams = {
   Order: {
@@ -19,15 +22,31 @@ type RouteDetailsParams = {
 type OrderRouteProps = RouteProp<RouteDetailsParams, "Order">;
 
 const Order = () => {
-  const route = useRoute<OrderRouteProps>();
+  const navigation =
+    useNavigation();
 
+  const route = useRoute<OrderRouteProps>();
   const [qtd, setQtd] = useState("");
+
+  async function handleDelete(id: string) {
+    try {
+      await api.delete("/order", {
+        params: {
+          id: id,
+        },
+      });
+
+      navigation.goBack();
+    } catch (error) {
+      console.log("Erro ao excluir mesa", error);
+    }
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.table}>
         <Text style={styles.tableNumber}>Mesa {route.params.number}</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDelete(route.params?.order_id)}>
           <Feather name="trash-2" size={32} color="red" />
         </TouchableOpacity>
       </View>
@@ -139,7 +158,7 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: "center",
     width: "35%",
-    borderRadius: 4
+    borderRadius: 4,
   },
   addText: {
     fontSize: 30,

@@ -12,13 +12,13 @@ import { CategoryProps } from "../../pages/Order";
 interface ModalPickerProps {
   selectedItem: (item: CategoryProps) => void;
   closeModal: () => void;
-  category: CategoryProps[];
+  options?: CategoryProps[];
 }
 
 const { width: WIDTH, height: HEIGHT } = Dimensions.get("window");
 
 const ModalPicker = ({
-  category,
+  options,
   closeModal,
   selectedItem,
 }: ModalPickerProps) => {
@@ -34,7 +34,7 @@ const ModalPicker = ({
         <Text style={styles.title}>Selecione uma categoria</Text>
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          {category.map((item) => (
+          {options?.map((item) => (
             <TouchableOpacity
               key={item.id}
               onPress={() => onPressItem(item)}

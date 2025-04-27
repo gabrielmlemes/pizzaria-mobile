@@ -21,6 +21,11 @@ type RouteDetailsParams = {
 
 type OrderRouteProps = RouteProp<RouteDetailsParams, "Order">;
 
+interface ProductsProps {
+  id: string;
+  name: string;
+}
+
 export interface CategoryProps {
   id: string;
   name: string;
@@ -31,9 +36,18 @@ const Order = () => {
 
   const route = useRoute<OrderRouteProps>();
   const [qtd, setQtd] = useState("");
+
   const [category, setCategory] = useState<CategoryProps[] | []>([]);
-  const [selectedCategory, setSelectedCategory] = useState<CategoryProps>();
+  const [selectedCategory, setSelectedCategory] = useState<
+    CategoryProps | undefined
+  >();
   const [modalCategoryVisible, setModalCategoryVisible] = useState(false);
+
+  const [products, setProducts] = useState<ProductsProps[] | []>([]);
+  const [selectedProduct, setSelectedProduct] = useState<
+    ProductsProps | undefined
+  >();
+  const [modalProductVisible, setModalProductVisible] = useState(false);
 
   const fetchData = async () => {
     await api.get("/category").then((response) => {
@@ -42,9 +56,24 @@ const Order = () => {
     });
   };
 
+  const loadProducts = async () => {
+    const res = await api.get("/category/product", {
+      params: {
+        id: selectedCategory?.id,
+      },
+    });
+
+    setProducts(res.data);
+    setSelectedProduct(res.data[0]);
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [selectedCategory]);
 
   async function handleDelete(id: string) {
     try {
@@ -60,16 +89,12 @@ const Order = () => {
     }
   }
 
-  function handleModal() {
-    setModalCategoryVisible(true);
+  function handleChangeCategory(item: CategoryProps) {
+    setSelectedCategory(item);
   }
 
-  function closeModal() {
-    setModalCategoryVisible(false);
-  }
-
-  function handleChangeCategory(item:CategoryProps) {
-    setSelectedCategory(item)
+  function handleChangeProducs(item: ProductsProps) {
+    setSelectedProduct(item);
   }
 
   return (
@@ -81,30 +106,59 @@ const Order = () => {
         </TouchableOpacity>
       </View>
 
-      {/* refact */}
-      <TouchableOpacity style={styles.input} onPress={handleModal}>
-        <Text style={styles.orderText}>
-          {selectedCategory?.name
-            ? selectedCategory?.name
-            : "Nenhuma categoria disponível"}
-        </Text>
-      </TouchableOpacity>
+      {/* categorias */}
+      {category.length !== 0 && (
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => setModalCategoryVisible(true)}
+        >
+          <Text style={styles.orderText}>
+            {selectedCategory?.name
+              ? selectedCategory?.name
+              : "Nenhuma categoria disponível"}
+          </Text>
+        </TouchableOpacity>
+      )}
 
+      {/* modal de categorias */}
       {modalCategoryVisible && (
         <Modal
           transparent={true}
           visible={modalCategoryVisible}
           animationType="fade"
-         >
+        >
           <ModalPicker
             selectedItem={handleChangeCategory}
-            closeModal={closeModal}
-            category={category}
+            closeModal={() => setModalCategoryVisible(false)}
+            options={category}
           />
         </Modal>
       )}
 
-      <TouchableOpacity style={styles.input}></TouchableOpacity>
+      {/* produtos */}
+      {products.length !== 0 && (
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => setModalProductVisible(true)}
+        >
+          <Text style={styles.orderText}>{selectedProduct?.name}</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* modal de produtos por categoria */}
+      {modalProductVisible && (
+        <Modal
+          transparent={true}
+          visible={modalProductVisible}
+          animationType="fade"
+        >
+          <ModalPicker
+            selectedItem={handleChangeProducs}
+            closeModal={() => setModalProductVisible(false)}
+            options={products}
+          />
+        </Modal>
+      )}
 
       <View style={styles.qtdContainer}>
         <Text style={styles.qtdText}>Quantidade</Text>

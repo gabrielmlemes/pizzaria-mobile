@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  FlatList,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../../services/api";
 import ModalPicker from "../../components/ModalPicker";
+import OrderItems from "../../components/OrderItems";
 
 type RouteDetailsParams = {
   Order: {
@@ -31,11 +33,17 @@ export interface CategoryProps {
   name: string;
 }
 
+export interface ItemsProps {
+  id: string;
+  product_id: string;
+  name: string;
+  amount: string | number;
+}
+
 const Order = () => {
   const navigation = useNavigation();
 
   const route = useRoute<OrderRouteProps>();
-  const [qtd, setQtd] = useState("");
 
   const [category, setCategory] = useState<CategoryProps[] | []>([]);
   const [selectedCategory, setSelectedCategory] = useState<
@@ -49,12 +57,19 @@ const Order = () => {
   >();
   const [modalProductVisible, setModalProductVisible] = useState(false);
 
-  const fetchData = async () => {
+  const [amount, setAmount] = useState("");
+  const [items, setItems] = useState<ItemsProps[] | []>([]);
+
+  const loadCategory = async () => {
     await api.get("/category").then((response) => {
       setCategory(response.data);
       setSelectedCategory(response.data[0]);
     });
   };
+
+  useEffect(() => {
+    loadCategory();
+  }, []);
 
   const loadProducts = async () => {
     const res = await api.get("/category/product", {
@@ -66,10 +81,6 @@ const Order = () => {
     setProducts(res.data);
     setSelectedProduct(res.data[0]);
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   useEffect(() => {
     loadProducts();
@@ -88,22 +99,53 @@ const Order = () => {
       console.log("Erro ao excluir mesa", error);
     }
   }
-
   function handleChangeCategory(item: CategoryProps) {
     setSelectedCategory(item);
   }
-
   function handleChangeProducs(item: ProductsProps) {
     setSelectedProduct(item);
+  }
+  async function handleAddItem() {
+    if (!selectedProduct || !selectedCategory || !amount) return;
+
+    const res = await api.post("/order/item", {
+      order_id: route.params?.order_id,
+      product_id: selectedProduct?.id,
+      amount: Number(amount),
+    });
+
+    const data = {
+      id: res.data.id,
+      product_id: selectedProduct?.id as string,
+      name: selectedProduct?.name as string,
+      amount: amount,
+    };
+
+    setItems((oldArray) => [...oldArray, data]);
+  }
+
+  async function handleDeleteItem(id: string) {
+    await api.delete("/order/item", {
+      params: {
+        item_id: id,
+      },
+    });
+
+    setItems((oldArray) => oldArray.filter((item) => item.id !== id));
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.table}>
         <Text style={styles.tableNumber}>Mesa {route.params.number}</Text>
-        <TouchableOpacity onPress={() => handleDelete(route.params?.order_id)}>
-          <Feather name="trash-2" size={32} color="red" />
-        </TouchableOpacity>
+        {!items ||
+          (items.length === 0 && (
+            <TouchableOpacity
+              onPress={() => handleDelete(route.params?.order_id)}
+            >
+              <Feather name="trash-2" size={32} color="red" />
+            </TouchableOpacity>
+          ))}
       </View>
 
       {/* categorias */}
@@ -169,20 +211,40 @@ const Order = () => {
           ]}
           placeholderTextColor="#f0f0f0"
           keyboardType="numeric"
-          value={qtd}
-          onChangeText={(text) => setQtd(text)}
+          value={amount}
+          onChangeText={setAmount}
         />
       </View>
 
       <View style={styles.buttons}>
-        <TouchableOpacity style={styles.addBtn}>
+        <TouchableOpacity style={styles.addBtn} onPress={handleAddItem}>
           <Text style={styles.addText}>+</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.nextBtn}>
-          <Text style={styles.nextText}>Avançar</Text>
+        <TouchableOpacity
+          style={styles.nextBtn}
+          disabled={items && items.length === 0}
+        >
+          <Text
+            style={[
+              styles.nextText,
+              { opacity: items && items.length === 0 ? 0.3 : 1 },
+            ]}
+          >
+            Avançar
+          </Text>
         </TouchableOpacity>
       </View>
+
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1, marginTop: 20 }}
+        data={items}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <OrderItems data={item} deleteItem={handleDeleteItem} />
+        )}
+      />
     </View>
   );
 };
@@ -194,6 +256,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1d1d2e",
     paddingHorizontal: "7%",
     maxWidth: "100%",
+    paddingTop: 25,
   },
   table: {
     flexDirection: "row",

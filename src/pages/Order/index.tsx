@@ -13,6 +13,8 @@ import { Feather } from "@expo/vector-icons";
 import { api } from "../../services/api";
 import ModalPicker from "../../components/ModalPicker";
 import OrderItems from "../../components/OrderItems";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { StackParamsList } from "../../routes/app.routes";
 
 type RouteDetailsParams = {
   Order: {
@@ -41,7 +43,8 @@ export interface ItemsProps {
 }
 
 const Order = () => {
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<StackParamsList>>();
 
   const route = useRoute<OrderRouteProps>();
 
@@ -134,6 +137,13 @@ const Order = () => {
     setItems((oldArray) => oldArray.filter((item) => item.id !== id));
   }
 
+  async function sendOrder() {
+    navigation.navigate("FinishOrder", {
+      order_id: route.params?.order_id,
+      number: route.params.number,
+    });
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.table}>
@@ -224,6 +234,7 @@ const Order = () => {
         <TouchableOpacity
           style={styles.nextBtn}
           disabled={items && items.length === 0}
+          onPress={sendOrder}
         >
           <Text
             style={[

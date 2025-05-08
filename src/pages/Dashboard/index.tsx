@@ -11,14 +11,15 @@ import { AuthContext } from "../../contexts/AuthContext";
 import { api } from "../../services/api";
 import { StackParamsList } from "../../routes/app.routes";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const Dashboard = () => {
+  const { signOut } = useContext(AuthContext);
+
   const navigation =
     useNavigation<NativeStackNavigationProp<StackParamsList>>();
 
   const [tableNumber, setTableNumber] = useState("");
-
-  const { signOut } = useContext(AuthContext);
 
   async function openOrder() {
     if (tableNumber === "") {
@@ -57,6 +58,10 @@ const Dashboard = () => {
       <TouchableOpacity style={styles.button} onPress={openOrder}>
         <Text style={styles.buttonText}>ABRIR MESA</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity style={styles.Signoutbutton} onPress={signOut}>
+        <MaterialIcons name="logout" size={35} color="red" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -92,6 +97,16 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
     justifyContent: "center",
     borderRadius: 4,
+  },
+  Signoutbutton: {
+    width: "8%",
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    margin: 10,
   },
   buttonText: {
     fontSize: 16,

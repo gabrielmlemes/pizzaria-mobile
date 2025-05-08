@@ -1,0 +1,19 @@
+{
+  "cli": {
+    "version": ">= 6.0.0"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "URL_DEPLOY": "http://192.168.57.46:3333"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "URL_DEPLOY": "https://pizzaria-backend-theta.vercel.app"
+      }
+    }
+  }
+}
